@@ -116,6 +116,9 @@ func ServeAPI(host, basePath string, schemes []string) error {
 	// api_key:
 	// oauth: read, write
 	//
+	// Parameters:
+	// content order in:body required "Order"
+	//
 	// Responses:
 	// default: genericError
 	// 200: someResponse
@@ -139,6 +142,10 @@ func ServeAPI(host, basePath string, schemes []string) error {
 	// Security:
 	// api_key:
 	// oauth: read, write
+	//
+	// Parameters:
+	// id int in:path required "Order ID"
+	// name string:uuid in:query false "Filter by name"
 	//
 	// Responses:
 	// default: genericError

@@ -39,6 +39,10 @@ func opSecurityDefsSetter(op *spec.Operation) func([]map[string][]string) {
 	return func(securityDefs []map[string][]string) { op.Security = securityDefs }
 }
 
+func opParametersSetter(op *spec.Operation) func([]spec.Parameter) {
+	return func(parameters []spec.Parameter) { op.Parameters = parameters }
+}
+
 func opResponsesSetter(op *spec.Operation) func(*spec.Response, map[int]spec.Response) {
 	return func(def *spec.Response, scr map[int]spec.Response) {
 		if op.Responses == nil {
@@ -87,6 +91,7 @@ func (rp *routesParser) Parse(gofile *ast.File, target interface{}) error {
 			newMultiLineTagParser("Produces", newMultilineDropEmptyParser(rxProduces, opProducesSetter(op))),
 			newSingleLineTagParser("Schemes", newSetSchemes(opSchemeSetter(op))),
 			newMultiLineTagParser("Security", newSetSecurityDefinitions(rxSecuritySchemes, opSecurityDefsSetter(op))),
+			newMultiLineTagParser("Parameters", newSetParameters(rp.definitions, opParametersSetter(op))),
 			newMultiLineTagParser("Responses", sr),
 		}
 		if err := sp.Parse(content.Remaining); err != nil {

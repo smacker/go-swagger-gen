@@ -140,6 +140,10 @@ func ServeAPI(host, basePath string, schemes []string) error {
 	// api_key:
 	// oauth: read, write
 	//
+	// Parameters:
+	// id int in:path required "Order ID"
+	// name string in:query false "Filter by name"
+	//
 	// Responses:
 	// default: body:genericError
 	// 200: body:someResponse
