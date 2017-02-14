@@ -805,6 +805,20 @@ func (scp *schemaParser) createParser(nm string, schema, ps *spec.Schema, fld *a
 			newSingleLineTagParser("required", &setRequiredSchema{schema, nm}),
 		}
 	}
+
+	required := parseRequiredFromValidTag(fld)
+	if required {
+		alreadyInRequired := false
+		for _, name := range schema.Required {
+			if name == nm {
+				alreadyInRequired = true
+			}
+		}
+		if !alreadyInRequired {
+			schema.Required = append(schema.Required, nm)
+		}
+	}
+
 	return sp
 }
 
@@ -916,6 +930,11 @@ func (scp *schemaParser) parseIdentProperty(pkg *loader.PackageInfo, expr *ast.I
 		if err != nil {
 			return fmt.Errorf("package %s, error is: %v", pkg.String(), err)
 		}
+		return nil
+	}
+	// exception for time.Time
+	if pkg.String() == "time" && expr.Name == "Time" {
+		prop.Typed("string", "date-time")
 		return nil
 	}
 
@@ -1194,4 +1213,23 @@ func parseJSONTag(field *ast.Field) (name string, ignore bool, err error) {
 		}
 	}
 	return name, false, nil
+}
+
+func parseRequiredFromValidTag(field *ast.Field) bool {
+	if field.Tag != nil && len(strings.TrimSpace(field.Tag.Value)) > 0 {
+		tv, _ := strconv.Unquote(field.Tag.Value)
+
+		if strings.TrimSpace(tv) != "" {
+			st := reflect.StructTag(tv)
+			validTag := st.Get("valid")
+			if validTag == "" {
+				validTag = st.Get("validation")
+			}
+			if validTag == "" {
+				return false
+			}
+			return strings.Contains(validTag, "required")
+		}
+	}
+	return false
 }
