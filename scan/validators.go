@@ -748,3 +748,30 @@ func (ss *setOpResponses) Parse(lines []string) error {
 	ss.set(def, scr)
 	return nil
 }
+
+type setTypeFormatParam struct {
+	tgt *spec.Parameter
+}
+
+var rxFormat = regexp.MustCompile(`[Ff]ormat: (.+)`)
+
+func (su *setTypeFormatParam) Matches(line string) bool {
+	if su.tgt.Type != "string" {
+		return false
+	}
+	return rxFormat.MatchString(line)
+}
+
+func (su *setTypeFormatParam) Parse(lines []string) error {
+	if su.tgt.Type != "string" {
+		return nil
+	}
+	if len(lines) == 0 || (len(lines) == 1 && len(lines[0]) == 0) {
+		return nil
+	}
+	matches := rxFormat.FindStringSubmatch(lines[0])
+	if len(matches) > 1 && len(matches[1]) > 0 {
+		su.tgt.Format = matches[1]
+	}
+	return nil
+}

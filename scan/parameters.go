@@ -113,15 +113,15 @@ func (sv paramValidations) SetMaxLength(val int64)         { sv.current.MaxLengt
 func (sv paramValidations) SetPattern(val string)          { sv.current.Pattern = val }
 func (sv paramValidations) SetUnique(val bool)             { sv.current.UniqueItems = val }
 func (sv paramValidations) SetCollectionFormat(val string) { sv.current.CollectionFormat = val }
-func (sv paramValidations) SetEnum(val string)           {
-    list := strings.Split(val, ",")
-    interfaceSlice := make([]interface{}, len(list))
-    for i, d := range list {
-        interfaceSlice[i] = d
-    }
-    sv.current.Enum = interfaceSlice
+func (sv paramValidations) SetEnum(val string) {
+	list := strings.Split(val, ",")
+	interfaceSlice := make([]interface{}, len(list))
+	for i, d := range list {
+		interfaceSlice[i] = d
+	}
+	sv.current.Enum = interfaceSlice
 }
-func (sv paramValidations) SetDefault(val string)          { sv.current.Default = val }
+func (sv paramValidations) SetDefault(val string) { sv.current.Default = val }
 
 type itemsValidations struct {
 	current *spec.Items
@@ -143,15 +143,15 @@ func (sv itemsValidations) SetMaxLength(val int64)         { sv.current.MaxLengt
 func (sv itemsValidations) SetPattern(val string)          { sv.current.Pattern = val }
 func (sv itemsValidations) SetUnique(val bool)             { sv.current.UniqueItems = val }
 func (sv itemsValidations) SetCollectionFormat(val string) { sv.current.CollectionFormat = val }
-func (sv itemsValidations) SetEnum(val string)           {
-    list := strings.Split(val, ",")
-    interfaceSlice := make([]interface{}, len(list))
-    for i, d := range list {
-        interfaceSlice[i] = d
-    }
-    sv.current.Enum = interfaceSlice
+func (sv itemsValidations) SetEnum(val string) {
+	list := strings.Split(val, ",")
+	interfaceSlice := make([]interface{}, len(list))
+	for i, d := range list {
+		interfaceSlice[i] = d
+	}
+	sv.current.Enum = interfaceSlice
 }
-func (sv itemsValidations) SetDefault(val string)          { sv.current.Default = val }
+func (sv itemsValidations) SetDefault(val string) { sv.current.Default = val }
 
 type paramDecl struct {
 	File         *ast.File
@@ -362,6 +362,7 @@ func (pp *paramStructParser) parseStructType(gofile *ast.File, operation *spec.O
 						newSingleLineTagParser("default", &setDefault{paramValidations{&ps}, rxf(rxDefaultFmt, "")}),
 						newSingleLineTagParser("required", &setRequiredParam{&ps}),
 						newSingleLineTagParser("in", &matchOnlyParam{&ps, rxIn}),
+						newSingleLineTagParser("format", &setTypeFormatParam{&ps}),
 					}
 
 					itemsTaggers := func(items *spec.Items, level int) []tagParser {
