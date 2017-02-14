@@ -39,6 +39,15 @@
 //     - application/json
 //     - application/xml
 //
+//     Security:
+//       api_key:
+//
+//     SecurityDefinitions:
+//       api_key:
+//         type: apiKey
+//         name: Authorization
+//         description: Authenticate by JWT token.
+//         in: header
 //
 // swagger:meta
 package classification

@@ -87,6 +87,14 @@ func verifyMeta(t testing.TB, doc *spec.Swagger) {
 	assert.EqualValues(t, []string{"http", "https"}, doc.Schemes)
 	assert.Equal(t, "localhost", doc.Host)
 	assert.Equal(t, "/v2", doc.BasePath)
+	assert.EqualValues(t, []map[string][]string{{"api_key": {}}}, doc.Security)
+	assert.Equal(t, 1, len(doc.SecurityDefinitions))
+	def, ok := doc.SecurityDefinitions["api_key"]
+	assert.True(t, ok)
+	assert.Equal(t, "apiKey", def.Type)
+	assert.Equal(t, "Authorization", def.Name)
+	assert.Equal(t, "Authenticate by JWT token.", def.Description)
+	assert.Equal(t, "header", def.In)
 }
 
 func verifyInfo(t testing.TB, info *spec.Info) {

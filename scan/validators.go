@@ -500,23 +500,23 @@ func (ss *setSchemes) Parse(lines []string) error {
 	return nil
 }
 
-func newSetSecurityDefinitions(rx *regexp.Regexp, setter func([]map[string][]string)) *setSecurityDefinitions {
-	return &setSecurityDefinitions{
+func newSetSecurity(rx *regexp.Regexp, setter func([]map[string][]string)) *setSecurity {
+	return &setSecurity{
 		set: setter,
 		rx:  rx,
 	}
 }
 
-type setSecurityDefinitions struct {
+type setSecurity struct {
 	set func([]map[string][]string)
 	rx  *regexp.Regexp
 }
 
-func (ss *setSecurityDefinitions) Matches(line string) bool {
+func (ss *setSecurity) Matches(line string) bool {
 	return ss.rx.MatchString(line)
 }
 
-func (ss *setSecurityDefinitions) Parse(lines []string) error {
+func (ss *setSecurity) Parse(lines []string) error {
 	if len(lines) == 0 || (len(lines) == 1 && len(lines[0]) == 0) {
 		return nil
 	}
@@ -543,6 +543,64 @@ func (ss *setSecurityDefinitions) Parse(lines []string) error {
 		}
 	}
 	ss.set(result)
+	return nil
+}
+
+func newSetSecurityDefs(rx *regexp.Regexp, setter func(spec.SecurityDefinitions)) *setSecurityDefs {
+	return &setSecurityDefs{
+		set: setter,
+		rx:  rx,
+	}
+}
+
+type setSecurityDefs struct {
+	set func(spec.SecurityDefinitions)
+	rx  *regexp.Regexp
+}
+
+func (ss *setSecurityDefs) Matches(line string) bool {
+	return ss.rx.MatchString(line)
+}
+
+func (ss *setSecurityDefs) Parse(lines []string) error {
+	if len(lines) == 0 || (len(lines) == 1 && len(lines[0]) == 0) {
+		return nil
+	}
+
+	var secSchema *spec.SecurityScheme
+	result := make(spec.SecurityDefinitions)
+	for _, line := range lines {
+		kv := strings.SplitN(line, ":", 2)
+		key := strings.TrimSpace(kv[0])
+		if key == "" {
+			continue
+		}
+		value := strings.TrimSpace(kv[1])
+		switch key {
+		case "type":
+			secSchema.Type = value
+		case "name":
+			secSchema.Name = value
+		case "description":
+			secSchema.Description = value
+		case "in":
+			secSchema.In = value
+		case "flow":
+			secSchema.Flow = value
+		case "authorizationUrl":
+			secSchema.AuthorizationURL = value
+		case "tokenUrl":
+			secSchema.TokenURL = value
+		case "scopes":
+			panic("SecurityScheme.Scopes isn't supported yet")
+		default:
+			secSchema = &spec.SecurityScheme{}
+			result[key] = secSchema
+		}
+	}
+
+	ss.set(result)
+
 	return nil
 }
 

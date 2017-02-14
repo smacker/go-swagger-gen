@@ -35,8 +35,8 @@ func opSchemeSetter(op *spec.Operation) func([]string) {
 	return func(schemes []string) { op.Schemes = schemes }
 }
 
-func opSecurityDefsSetter(op *spec.Operation) func([]map[string][]string) {
-	return func(securityDefs []map[string][]string) { op.Security = securityDefs }
+func opSecuritySetter(op *spec.Operation) func([]map[string][]string) {
+	return func(security []map[string][]string) { op.Security = security }
 }
 
 func opParametersSetter(op *spec.Operation) func([]spec.Parameter) {
@@ -90,7 +90,7 @@ func (rp *routesParser) Parse(gofile *ast.File, target interface{}) error {
 			newMultiLineTagParser("Consumes", newMultilineDropEmptyParser(rxConsumes, opConsumesSetter(op))),
 			newMultiLineTagParser("Produces", newMultilineDropEmptyParser(rxProduces, opProducesSetter(op))),
 			newSingleLineTagParser("Schemes", newSetSchemes(opSchemeSetter(op))),
-			newMultiLineTagParser("Security", newSetSecurityDefinitions(rxSecuritySchemes, opSecurityDefsSetter(op))),
+			newMultiLineTagParser("Security", newSetSecurity(rxSecurity, opSecuritySetter(op))),
 			newMultiLineTagParser("Parameters", newSetParameters(rp.definitions, opParametersSetter(op))),
 			newMultiLineTagParser("Responses", newSetAnnotatedResponses(sr)),
 		}
