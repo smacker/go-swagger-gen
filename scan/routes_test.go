@@ -85,7 +85,7 @@ func TestRoutesParser(t *testing.T) {
 	po, ok = ops.Paths["/orders/{id}"]
 	assert.True(t, ok)
 	assert.NotNil(t, po.Get)
-	assertOperation(t,
+	assertOperationAnnotated(t,
 		po.Get,
 		"orderDetails",
 		"gets the details for an order.",
@@ -224,6 +224,38 @@ func assertOperation(t *testing.T, op *spec.Operation, id, summary, description 
 	rsp, ok := op.Responses.StatusCodeResponses[200]
 	assert.True(t, ok)
 	assert.Equal(t, "#/responses/someResponse", rsp.Ref.String())
+	rsp, ok = op.Responses.StatusCodeResponses[422]
+	assert.True(t, ok)
+	assert.Equal(t, "#/responses/validationError", rsp.Ref.String())
+}
+
+func assertOperationAnnotated(t *testing.T, op *spec.Operation, id, summary, description string, tags, scopes []string) {
+	assert.NotNil(t, op)
+	assert.Equal(t, summary, op.Summary)
+	assert.Equal(t, description, op.Description)
+	assert.Equal(t, id, op.ID)
+	assert.EqualValues(t, tags, op.Tags)
+	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Consumes)
+	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Produces)
+	assert.EqualValues(t, []string{"http", "https", "ws", "wss"}, op.Schemes)
+	assert.Len(t, op.Security, 2)
+	akv, ok := op.Security[0]["api_key"]
+	assert.True(t, ok)
+	// akv must be defined & not empty
+	assert.NotNil(t, akv)
+	assert.Empty(t, akv)
+
+	vv, ok := op.Security[1]["oauth"]
+	assert.True(t, ok)
+	assert.EqualValues(t, scopes, vv)
+
+	assert.NotNil(t, op.Responses.Default)
+	assert.Equal(t, "#/responses/genericError", op.Responses.Default.Ref.String())
+
+	rsp, ok := op.Responses.StatusCodeResponses[200]
+	assert.True(t, ok)
+	// content of response it tested in route_annotated_test.go
+
 	rsp, ok = op.Responses.StatusCodeResponses[422]
 	assert.True(t, ok)
 	assert.Equal(t, "#/responses/validationError", rsp.Ref.String())

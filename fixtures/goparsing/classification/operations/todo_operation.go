@@ -118,6 +118,15 @@ func ServeAPI(host, basePath string, schemes []string) error {
 	//
 	// Parameters:
 	// content order in:body required "Order"
+	// | - name: someType
+	// |   in: query
+	// |   description: type of content
+	// |   required: true
+	// |   type: string
+	// |   enum:
+	// |     - value1
+	// |     - value2
+	// |     - value3
 	//
 	// Responses:
 	// default: genericError
@@ -149,8 +158,22 @@ func ServeAPI(host, basePath string, schemes []string) error {
 	//
 	// Responses:
 	// default: genericError
-	// 200: someResponse
+	// 200: "OK"
+	// | schema:
+	// |   required:
+	// |     - name
+	// |   properties:
+	// |     count:
+	// |       type: integer
+	// |     name:
+	// |       type: string
+	// |       format: email
+	// |     obj:
+	// |       $ref: "#/definitions/PostPackage"
 	// 422: validationError
+	// 403: "Access denided"
+	// | schema:
+	// |   $ref: "#/definitions/validationError"
 	mountItem("GET", basePath+"/orders/:id", nil)
 
 	// swagger:route PUT /orders/{id} orders updateOrder

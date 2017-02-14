@@ -92,7 +92,7 @@ func (rp *routesParser) Parse(gofile *ast.File, target interface{}) error {
 			newSingleLineTagParser("Schemes", newSetSchemes(opSchemeSetter(op))),
 			newMultiLineTagParser("Security", newSetSecurityDefinitions(rxSecuritySchemes, opSecurityDefsSetter(op))),
 			newMultiLineTagParser("Parameters", newSetParameters(rp.definitions, opParametersSetter(op))),
-			newMultiLineTagParser("Responses", sr),
+			newMultiLineTagParser("Responses", newSetAnnotatedResponses(sr)),
 		}
 		if err := sp.Parse(content.Remaining); err != nil {
 			return fmt.Errorf("operation (%s): %v", op.ID, err)
