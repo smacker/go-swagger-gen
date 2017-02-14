@@ -539,6 +539,10 @@ func cleanupScannerLines(lines []string, ur *regexp.Regexp) []string {
 	var lastContent int
 	var uncommented []string
 	for i, v := range lines {
+		// skip private comments
+		if len(v) >= 3 && v[0:2] == "//" && v[2] != ' ' {
+			continue
+		}
 		str := ur.ReplaceAllString(v, "")
 		uncommented = append(uncommented, str)
 		if str != "" {
