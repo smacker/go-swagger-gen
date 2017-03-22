@@ -160,25 +160,6 @@ type MyModelInputDTO struct {
 }
 ```
 
-### SecurityDefinitions support
-
-```go
-// Package classification Petstore API.
-//
-// Security:
-//   jwt_auth:
-//
-// SecurityDefinitions:
-//   jwt_auth:
-//     type: apiKey
-//     name: Authorization
-//     description: Authenticate by JWT token.
-//     in: header
-//
-// swagger:meta
-package controllers
-```
-
 ### Better alias support
 
 ```go
