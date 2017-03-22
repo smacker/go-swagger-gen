@@ -165,7 +165,6 @@ func TestSchemaParser(t *testing.T) {
 		msch, ok := definitions["order"]
 		assert.True(t, ok)
 		assert.Equal(t, pn, msch.Extensions["x-go-package"])
-		assert.Equal(t, "StoreOrder", msch.Extensions["x-go-name"])
 	}
 }
 
@@ -308,11 +307,6 @@ func assertProperty(t testing.TB, schema *spec.Schema, typeName, jsonName, forma
 			assert.Equal(t, typeName, schema.Properties[jsonName].Type[0])
 		}
 	}
-	if goName == "" {
-		assert.Equal(t, nil, schema.Properties[jsonName].Extensions["x-go-name"])
-	} else {
-		assert.Equal(t, goName, schema.Properties[jsonName].Extensions["x-go-name"])
-	}
 	assert.Equal(t, format, schema.Properties[jsonName].Format)
 }
 
@@ -357,7 +351,6 @@ func assertArrayProperty(t testing.TB, schema *spec.Schema, typeName, jsonName, 
 	if typeName != "" {
 		assert.Equal(t, typeName, prop.Items.Schema.Type[0])
 	}
-	assert.Equal(t, goName, prop.Extensions["x-go-name"])
 	assert.Equal(t, format, prop.Items.Schema.Format)
 }
 
@@ -401,7 +394,6 @@ func assertMapProperty(t testing.TB, schema *spec.Schema, typeName, jsonName, fo
 	if typeName != "" {
 		assert.Equal(t, typeName, prop.AdditionalProperties.Schema.Type[0])
 	}
-	assert.Equal(t, goName, prop.Extensions["x-go-name"])
 	assert.Equal(t, format, prop.AdditionalProperties.Schema.Format)
 }
 
@@ -448,22 +440,17 @@ func TestStructDiscriminators(t *testing.T) {
 	_ = classificationProg
 	schema := noModelDefs["animal"]
 
-	assert.Equal(t, "BaseStruct", schema.Extensions["x-go-name"])
 	assert.Equal(t, schema.Discriminator, "jsonClass")
 
 	sch := noModelDefs["gazelle"]
 	assert.Len(t, sch.AllOf, 2)
 	cl, _ := sch.Extensions.GetString("x-class")
 	assert.Equal(t, "a.b.c.d.E", cl)
-	cl, _ = sch.Extensions.GetString("x-go-name")
-	assert.Equal(t, "Gazelle", cl)
 
 	sch = noModelDefs["giraffe"]
 	assert.Len(t, sch.AllOf, 2)
 	cl, _ = sch.Extensions.GetString("x-class")
 	assert.Equal(t, "", cl)
-	cl, _ = sch.Extensions.GetString("x-go-name")
-	assert.Equal(t, "Giraffe", cl)
 
 	//sch = noModelDefs["lion"]
 
@@ -501,8 +488,6 @@ func TestInterfaceDiscriminators(t *testing.T) {
 		assert.Len(t, schema.AllOf, 2)
 		cl, _ := schema.Extensions.GetString("x-class")
 		assert.Equal(t, "com.tesla.models.ModelS", cl)
-		cl, _ = schema.Extensions.GetString("x-go-name")
-		assert.Equal(t, "ModelS", cl)
 
 		sch := schema.AllOf[0]
 		assert.Equal(t, "#/definitions/TeslaCar", sch.Ref.String())
@@ -513,10 +498,6 @@ func TestInterfaceDiscriminators(t *testing.T) {
 
 	schema, ok = noModelDefs["modelA"]
 	if assert.True(t, ok) {
-
-		cl, _ := schema.Extensions.GetString("x-go-name")
-		assert.Equal(t, "ModelA", cl)
-
 		sch, ok := schema.Properties["Tesla"]
 		if assert.True(t, ok) {
 			assert.Equal(t, "#/definitions/TeslaCar", sch.Ref.String())
@@ -585,11 +566,6 @@ func assertDefinition(t testing.TB, defs map[string]spec.Schema, defName, typeNa
 
 		if assert.NotEmpty(t, schema.Type) {
 			assert.Equal(t, typeName, schema.Type[0])
-			if goName != "" {
-				assert.Equal(t, goName, schema.Extensions["x-go-name"])
-			} else {
-				assert.Nil(t, schema.Extensions["x-go-name"])
-			}
 			assert.Equal(t, formatName, schema.Format)
 		}
 	}
@@ -604,11 +580,6 @@ func assertMapDefinition(t testing.TB, defs map[string]spec.Schema, defName, typ
 			if assert.NotNil(t, adl) && assert.NotNil(t, adl.Schema) {
 				assert.Equal(t, typeName, adl.Schema.Type[0])
 				assert.Equal(t, formatName, adl.Schema.Format)
-			}
-			if goName != "" {
-				assert.Equal(t, goName, schema.Extensions["x-go-name"])
-			} else {
-				assert.Nil(t, schema.Extensions["x-go-name"])
 			}
 		}
 	}
@@ -625,11 +596,6 @@ func assertMapWithRefDefinition(t testing.TB, defs map[string]spec.Schema, defNa
 					assert.Equal(t, refURL, adl.Schema.Ref.String())
 				}
 			}
-			if goName != "" {
-				assert.Equal(t, goName, schema.Extensions["x-go-name"])
-			} else {
-				assert.Nil(t, schema.Extensions["x-go-name"])
-			}
 		}
 	}
 }
@@ -643,11 +609,6 @@ func assertArrayDefinition(t testing.TB, defs map[string]spec.Schema, defName, t
 			if assert.NotNil(t, adl) && assert.NotNil(t, adl.Schema) {
 				assert.Equal(t, typeName, adl.Schema.Type[0])
 				assert.Equal(t, formatName, adl.Schema.Format)
-			}
-			if goName != "" {
-				assert.Equal(t, goName, schema.Extensions["x-go-name"])
-			} else {
-				assert.Nil(t, schema.Extensions["x-go-name"])
 			}
 		}
 	}
@@ -664,11 +625,6 @@ func assertArrayWithRefDefinition(t testing.TB, defs map[string]spec.Schema, def
 					assert.Equal(t, refURL, adl.Schema.Ref.String())
 				}
 			}
-			if goName != "" {
-				assert.Equal(t, goName, schema.Extensions["x-go-name"])
-			} else {
-				assert.Nil(t, schema.Extensions["x-go-name"])
-			}
 		}
 	}
 }
@@ -679,11 +635,6 @@ func assertRefDefinition(t testing.TB, defs map[string]spec.Schema, defName, ref
 		if assert.NotZero(t, schema.Ref) {
 			url := schema.Ref.String()
 			assert.Equal(t, refURL, url)
-			if goName != "" {
-				assert.Equal(t, goName, schema.Extensions["x-go-name"])
-			} else {
-				assert.Nil(t, schema.Extensions["x-go-name"])
-			}
 		}
 	}
 }

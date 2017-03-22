@@ -266,7 +266,6 @@ func verifyParsedPetStore(t testing.TB, doc *spec.Swagger) {
 	assert.Equal(t, "string", sparam.Type)
 	assert.Equal(t, "", sparam.Format)
 	assert.False(t, sparam.Required)
-	assert.Equal(t, "Status", sparam.Extensions["x-go-name"])
 	assert.Equal(t, "#/responses/genericError", op.Get.Responses.Default.Ref.String())
 	assert.Len(t, op.Get.Parameters, 2)
 	sparam1 := op.Get.Parameters[names[0].Index]
@@ -275,7 +274,6 @@ func verifyParsedPetStore(t testing.TB, doc *spec.Swagger) {
 	assert.Equal(t, "string", sparam1.Type)
 	assert.Equal(t, "date", sparam1.Format)
 	assert.False(t, sparam1.Required)
-	assert.Equal(t, "Birthday", sparam1.Extensions["x-go-name"])
 	rs, ok := op.Get.Responses.StatusCodeResponses[200]
 	assert.True(t, ok)
 	assert.NotNil(t, rs.Schema)
@@ -417,7 +415,6 @@ func verifyIDParam(t testing.TB, param spec.Parameter, description string) {
 	assert.Equal(t, "integer", param.Type)
 	assert.Equal(t, "int64", param.Format)
 	assert.True(t, param.Required)
-	assert.Equal(t, "ID", param.Extensions["x-go-name"])
 }
 
 func verifyRefParam(t testing.TB, param spec.Parameter, description, refed string) {

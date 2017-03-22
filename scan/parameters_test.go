@@ -140,7 +140,6 @@ func TestParamsParser(t *testing.T) {
 			assert.Equal(t, "integer", param.Type)
 			assert.Equal(t, "int64", param.Format)
 			assert.True(t, param.Required)
-			assert.Equal(t, "ID", param.Extensions["x-go-name"])
 			assert.EqualValues(t, 1000, *param.Maximum)
 			assert.True(t, param.ExclusiveMaximum)
 			assert.EqualValues(t, 10, *param.Minimum)
@@ -152,7 +151,6 @@ func TestParamsParser(t *testing.T) {
 			assert.Equal(t, "integer", param.Type)
 			assert.Equal(t, "int32", param.Format)
 			assert.True(t, param.Required)
-			assert.Equal(t, "Score", param.Extensions["x-go-name"])
 			assert.EqualValues(t, 45, *param.Maximum)
 			assert.False(t, param.ExclusiveMaximum)
 			assert.EqualValues(t, 3, *param.Minimum)
@@ -163,7 +161,6 @@ func TestParamsParser(t *testing.T) {
 			assert.Equal(t, "header", param.In)
 			assert.Equal(t, "string", param.Type)
 			assert.True(t, param.Required)
-			assert.Equal(t, "Name", param.Extensions["x-go-name"])
 			assert.EqualValues(t, 4, *param.MinLength)
 			assert.EqualValues(t, 50, *param.MaxLength)
 			assert.Equal(t, "[A-Za-z0-9-.]*", param.Pattern)
@@ -174,20 +171,17 @@ func TestParamsParser(t *testing.T) {
 			assert.Equal(t, "string", param.Type)
 			assert.Equal(t, "date-time", param.Format)
 			assert.False(t, param.Required)
-			assert.Equal(t, "Created", param.Extensions["x-go-name"])
 
 		case "category":
 			assert.Equal(t, "The Category of this model", param.Description)
 			assert.Equal(t, "query", param.In)
 			assert.Equal(t, "string", param.Type)
 			assert.True(t, param.Required)
-			assert.Equal(t, "Category", param.Extensions["x-go-name"])
 			assert.EqualValues(t, []interface{}{"foo", "bar", "none"}, param.Enum, "%s enum values are incorrect", param.Name)
 			assert.Equal(t, "bar", param.Default, "%s default value is incorrect", param.Name)
 
 		case "foo_slice":
 			assert.Equal(t, "a FooSlice has foos which are strings", param.Description)
-			assert.Equal(t, "FooSlice", param.Extensions["x-go-name"])
 			assert.Equal(t, "query", param.In)
 			assert.Equal(t, "array", param.Type)
 			assert.False(t, param.Required)
@@ -202,7 +196,6 @@ func TestParamsParser(t *testing.T) {
 			assert.EqualValues(t, "\\w+", itprop.Pattern, "'foo_slice.items.pattern' should have \\w+")
 
 		case "items":
-			assert.Equal(t, "Items", param.Extensions["x-go-name"])
 			assert.Equal(t, "body", param.In)
 			assert.NotNil(t, param.Schema)
 			aprop := param.Schema
@@ -241,7 +234,6 @@ func TestParamsParser(t *testing.T) {
 
 		case "bar_slice":
 			assert.Equal(t, "a BarSlice has bars which are strings", param.Description)
-			assert.Equal(t, "BarSlice", param.Extensions["x-go-name"])
 			assert.Equal(t, "query", param.In)
 			assert.Equal(t, "array", param.Type)
 			assert.False(t, param.Required)

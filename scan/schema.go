@@ -302,9 +302,6 @@ func (scp *schemaParser) parseDecl(definitions map[string]spec.Schema, decl *sch
 		return nil
 	}
 
-	if decl.Name != decl.GoName {
-		schPtr.AddExtension("x-go-name", decl.GoName)
-	}
 	for _, pkgInfo := range scp.program.AllPackages {
 		if pkgInfo.Importable {
 			for _, fil := range pkgInfo.Files {
@@ -583,9 +580,6 @@ func (scp *schemaParser) parseInterfaceType(gofile *ast.File, bschema *spec.Sche
 				return err
 			}
 
-			if nm != gnm {
-				ps.AddExtension("x-go-name", gnm)
-			}
 			seenProperties[nm] = struct{}{}
 			schema.Properties[nm] = ps
 		}
@@ -676,7 +670,6 @@ func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema,
 	schema.Typed("object", "")
 	for _, fld := range tpe.Fields.List {
 		if len(fld.Names) > 0 && fld.Names[0] != nil && fld.Names[0].IsExported() {
-			gnm := fld.Names[0].Name
 			nm, ignore, err := parseJSONTag(fld)
 			if err != nil {
 				return err
@@ -698,9 +691,6 @@ func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema,
 				return err
 			}
 
-			if nm != gnm {
-				ps.AddExtension("x-go-name", gnm)
-			}
 			seenProperties[nm] = struct{}{}
 			schema.Properties[nm] = ps
 		}
