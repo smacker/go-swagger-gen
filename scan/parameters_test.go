@@ -35,7 +35,7 @@ func TestScanFileParam(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	assert.Len(t, noParamOps, 7)
+	assert.Len(t, noParamOps, 8)
 
 	of, ok := noParamOps["myOperation"]
 	assert.True(t, ok)
@@ -45,6 +45,20 @@ func TestScanFileParam(t *testing.T) {
 	assert.Equal(t, "formData", fileParam.In)
 	assert.Equal(t, "file", fileParam.Type)
 	assert.False(t, fileParam.Required)
+
+	emb, ok := noParamOps["myOtherOperation"]
+	assert.True(t, ok)
+	assert.Len(t, emb.Parameters, 2)
+	fileParam = emb.Parameters[0]
+	assert.Equal(t, "MyFormFile desc.", fileParam.Description)
+	assert.Equal(t, "formData", fileParam.In)
+	assert.Equal(t, "file", fileParam.Type)
+	assert.False(t, fileParam.Required)
+	extraParam := emb.Parameters[1]
+	assert.Equal(t, "ExtraParam desc.", extraParam.Description)
+	assert.Equal(t, "formData", extraParam.In)
+	assert.Equal(t, "integer", extraParam.Type)
+	assert.True(t, extraParam.Required)
 }
 
 func TestParamsParser(t *testing.T) {
@@ -59,7 +73,7 @@ func TestParamsParser(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	assert.Len(t, noParamOps, 7)
+	assert.Len(t, noParamOps, 8)
 
 	cr, ok := noParamOps["yetAnotherOperation"]
 	assert.True(t, ok)
@@ -168,8 +182,8 @@ func TestParamsParser(t *testing.T) {
 			assert.Equal(t, "string", param.Type)
 			assert.True(t, param.Required)
 			assert.Equal(t, "Category", param.Extensions["x-go-name"])
-            assert.EqualValues(t, []interface{}{"foo","bar","none"}, param.Enum, "%s enum values are incorrect", param.Name)
-            assert.Equal(t, "bar", param.Default, "%s default value is incorrect", param.Name)
+			assert.EqualValues(t, []interface{}{"foo", "bar", "none"}, param.Enum, "%s enum values are incorrect", param.Name)
+			assert.Equal(t, "bar", param.Default, "%s default value is incorrect", param.Name)
 
 		case "foo_slice":
 			assert.Equal(t, "a FooSlice has foos which are strings", param.Description)
@@ -273,8 +287,8 @@ func TestParamsParser(t *testing.T) {
 			assert.Equal(t, 2, index, "%s index incorrect", param.Name)
 		case "created":
 			assert.Equal(t, 3, index, "%s index incorrect", param.Name)
-        case "category":
-            assert.Equal(t, 4, index, "%s index incorrect", param.Name)
+		case "category":
+			assert.Equal(t, 4, index, "%s index incorrect", param.Name)
 		case "foo_slice":
 			assert.Equal(t, 5, index, "%s index incorrect", param.Name)
 		case "bar_slice":

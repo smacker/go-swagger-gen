@@ -280,6 +280,8 @@ func (pp *paramStructParser) parseEmbeddedStruct(gofile *ast.File, operation *sp
 		if st, ok := ts.Type.(*ast.StructType); ok {
 			return pp.parseStructType(file, operation, st, seenPreviously)
 		}
+	case *ast.StarExpr:
+		return pp.parseEmbeddedStruct(gofile, operation, tpe.X, seenPreviously)
 	}
 	return fmt.Errorf("unable to resolve embedded struct for: %v\n", expr)
 }
@@ -348,6 +350,8 @@ func (pp *paramStructParser) parseStructType(gofile *ast.File, operation *spec.O
 				sp.setDescription = func(lines []string) { ps.Description = joinDropLast(lines) }
 				if ps.Ref.String() == "" {
 					sp.taggers = []tagParser{
+						newSingleLineTagParser("in", &matchOnlyParam{&ps, rxIn}),
+						newSingleLineTagParser("format", &setTypeFormatParam{&ps}),
 						newSingleLineTagParser("maximum", &setMaximum{paramValidations{&ps}, rxf(rxMaximumFmt, "")}),
 						newSingleLineTagParser("minimum", &setMinimum{paramValidations{&ps}, rxf(rxMinimumFmt, "")}),
 						newSingleLineTagParser("multipleOf", &setMultipleOf{paramValidations{&ps}, rxf(rxMultipleOfFmt, "")}),
@@ -361,8 +365,6 @@ func (pp *paramStructParser) parseStructType(gofile *ast.File, operation *spec.O
 						newSingleLineTagParser("enum", &setEnum{paramValidations{&ps}, rxf(rxEnumFmt, "")}),
 						newSingleLineTagParser("default", &setDefault{paramValidations{&ps}, rxf(rxDefaultFmt, "")}),
 						newSingleLineTagParser("required", &setRequiredParam{&ps}),
-						newSingleLineTagParser("in", &matchOnlyParam{&ps, rxIn}),
-						newSingleLineTagParser("format", &setTypeFormatParam{&ps}),
 					}
 
 					itemsTaggers := func(items *spec.Items, level int) []tagParser {
@@ -395,6 +397,12 @@ func (pp *paramStructParser) parseStructType(gofile *ast.File, operation *spec.O
 							eleTaggers := itemsTaggers(items, level)
 							sp.taggers = append(eleTaggers, sp.taggers...)
 							otherTaggers, err := parseArrayTypes(iftpe.Elt, items.Items, level+1)
+							if err != nil {
+								return nil, err
+							}
+							return otherTaggers, nil
+						case *ast.SelectorExpr:
+							otherTaggers, err := parseArrayTypes(iftpe.Sel, items.Items, level+1)
 							if err != nil {
 								return nil, err
 							}
@@ -433,12 +441,15 @@ func (pp *paramStructParser) parseStructType(gofile *ast.File, operation *spec.O
 				} else {
 
 					sp.taggers = []tagParser{
-						newSingleLineTagParser("required", &matchOnlyParam{&ps, rxRequired}),
 						newSingleLineTagParser("in", &matchOnlyParam{&ps, rxIn}),
+						newSingleLineTagParser("required", &matchOnlyParam{&ps, rxRequired}),
 					}
 				}
 				if err := sp.Parse(fld.Doc); err != nil {
 					return err
+				}
+				if ps.In == "path" {
+					ps.Required = true
 				}
 
 				if ps.Name == "" {

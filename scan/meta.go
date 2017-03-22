@@ -54,10 +54,10 @@ func metaSchemeSetter(meta *spec.Swagger) func([]string) {
 }
 
 func metaSecuritySetter(meta *spec.Swagger) func([]map[string][]string) {
-	return func(sec []map[string][]string) { meta.Security = sec }
+	return func(secDefs []map[string][]string) { meta.Security = secDefs }
 }
 
-func metaSecurityDefsSetter(meta *spec.Swagger) func(spec.SecurityDefinitions) {
+func metaSecurityDefinitionsSetter(meta *spec.Swagger) func(spec.SecurityDefinitions) {
 	return func(secDefs spec.SecurityDefinitions) { meta.SecurityDefinitions = secDefs }
 }
 
@@ -80,8 +80,8 @@ func newMetaParser(swspec *spec.Swagger) *sectionedParser {
 		newMultiLineTagParser("Consumes", newMultilineDropEmptyParser(rxConsumes, metaConsumesSetter(swspec))),
 		newMultiLineTagParser("Produces", newMultilineDropEmptyParser(rxProduces, metaProducesSetter(swspec))),
 		newSingleLineTagParser("Schemes", newSetSchemes(metaSchemeSetter(swspec))),
-		newMultiLineTagParser("Security", newSetSecurity(rxSecurity, metaSecuritySetter(swspec))),
-		newMultiLineTagParser("SecurityDefinitions", newSetSecurityDefs(rxSecurityDefs, metaSecurityDefsSetter(swspec))),
+		newMultiLineTagParser("Security", newSetSecurity(rxSecuritySchemes, metaSecuritySetter(swspec))),
+		newMultiLineTagParser("SecurityDefinitions", newSetSecurityDefinitions(rxSecurity, metaSecurityDefinitionsSetter(swspec))),
 		newSingleLineTagParser("Version", &setMetaSingle{swspec, rxVersion, setInfoVersion}),
 		newSingleLineTagParser("Host", &setMetaSingle{swspec, rxHost, setSwaggerHost}),
 		newSingleLineTagParser("BasePath", &setMetaSingle{swspec, rxBasePath, setSwaggerBasePath}),

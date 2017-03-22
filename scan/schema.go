@@ -298,7 +298,8 @@ func (scp *schemaParser) parseDecl(definitions map[string]spec.Schema, decl *sch
 			}
 		}
 	default:
-		return fmt.Errorf("this is a bug, missing parser for a %T: %+v", tpe, tpe)
+		log.Printf("WARNING: Missing parser for a %T, skipping model: %s\n", tpe, decl.Name)
+		return nil
 	}
 
 	if decl.Name != decl.GoName {
@@ -873,10 +874,16 @@ func (scp *schemaParser) packageForSelector(gofile *ast.File, expr ast.Expr) (*l
 					break
 				}
 			} else {
-				parts := strings.Split(pv, "/")
-				if len(parts) > 0 && parts[len(parts)-1] == pth.Name {
+				pkg := scp.program.Package(pv)
+				if pkg != nil && pth.Name == pkg.Pkg.Name() {
 					selPath = pv
 					break
+				} else {
+					parts := strings.Split(pv, "/")
+					if len(parts) > 0 && parts[len(parts)-1] == pth.Name {
+						selPath = pv
+						break
+					}
 				}
 			}
 		}
