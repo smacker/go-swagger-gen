@@ -176,3 +176,26 @@ Aliases in swagger.json present as native types. Therefore all validation commen
 ### x-go-name extension was removed
 
 I don't want to expose internal name in swagger
+
+### Don't put unused definitions in result swagger.json
+
+Scanner creates swagger definitions for embedded structures too, but often we don't need them.
+
+Consider example:
+
+```go
+type BaseModel struct {
+    ...
+}
+
+// swagger:model
+type MyModel struct {
+    BaseModel
+    ...
+}
+
+// we use only "#/definitions/MyModel" somewhere
+// but BaseModel definition will also appear in swagger json
+```
+
+Therefore `go-swagger-gen` analyzes final json and removes unused definitions.

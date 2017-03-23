@@ -24,6 +24,7 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
 	"github.com/jessevdk/go-flags"
+	"github.com/smacker/go-swagger-gen/clean"
 	"github.com/smacker/go-swagger-gen/scan"
 )
 
@@ -64,6 +65,8 @@ func (s *SpecFile) Execute(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	clean.RemoveUnusedDefinitions(swspec)
 
 	return writeToFile(swspec, !s.Compact, string(s.Output))
 }
