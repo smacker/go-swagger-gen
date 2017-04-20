@@ -16,13 +16,17 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 
+	swaggererrors "github.com/go-openapi/errors"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 	"github.com/jessevdk/go-flags"
 	"github.com/smacker/go-swagger-gen/clean"
 	"github.com/smacker/go-swagger-gen/scan"
@@ -32,8 +36,10 @@ var opts struct{}
 
 func main() {
 	parser := flags.NewParser(&opts, flags.Default)
-	_, err := parser.AddCommand("spec", "generate spec", "generate spec file from go code", &SpecFile{})
-	if err != nil {
+	if _, err := parser.AddCommand("spec", "generate spec", "generate spec file from go code", &SpecFile{}); err != nil {
+		log.Fatal(err)
+	}
+	if _, err := parser.AddCommand("validate", "validate the swagger document", "validate the provided swagger document against a swagger spec", &ValidateSpec{}); err != nil {
 		log.Fatal(err)
 	}
 	if _, err := parser.Parse(); err != nil {
@@ -105,4 +111,34 @@ func writeToFile(swspec *spec.Swagger, pretty bool, output string) error {
 		return nil
 	}
 	return ioutil.WriteFile(output, b, 0644)
+}
+
+// ValidateSpec is a command that validates a swagger document
+// against the swagger json schema
+type ValidateSpec struct {
+}
+
+// Execute validates the spec
+func (c *ValidateSpec) Execute(args []string) error {
+	if len(args) == 0 {
+		return errors.New("The validate command requires the swagger document url to be specified")
+	}
+
+	swaggerDoc := args[0]
+	specDoc, err := loads.Spec(swaggerDoc)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	result := validate.Spec(specDoc, strfmt.Default)
+	if result == nil {
+		fmt.Printf("The swagger spec at %q is valid against swagger specification %s\n", swaggerDoc, specDoc.Version())
+	} else {
+		str := fmt.Sprintf("The swagger spec at %q is invalid against swagger specification %s. see errors :\n", swaggerDoc, specDoc.Version())
+		for _, desc := range result.(*swaggererrors.CompositeError).Errors {
+			str += fmt.Sprintf("- %s\n", desc)
+		}
+		return errors.New(str)
+	}
+	return nil
 }
