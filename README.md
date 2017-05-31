@@ -199,3 +199,20 @@ type MyModel struct {
 ```
 
 Therefore `go-swagger-gen` analyzes final json and removes unused definitions.
+
+### Works correctly for ignored field in overriding embedded struct
+
+```go
+type SimpleOne struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	Age  int32  `json:"age"`
+}
+
+type OverridingOneIgnore struct {
+	SimpleOne
+	Age int32 `json:"-"`
+}
+```
+
+It will generate object only with "id" and "name" fields.

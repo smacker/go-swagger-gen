@@ -252,11 +252,11 @@ func (scp *schemaParser) parseDecl(definitions map[string]spec.Schema, decl *sch
 	// * the following lines are the description
 	switch tpe := decl.TypeSpec.Type.(type) {
 	case *ast.StructType:
-		if err := scp.parseStructType(decl.File, schPtr, tpe, make(map[string]struct{})); err != nil {
+		if err := scp.parseStructType(decl.File, schPtr, tpe, make(map[string]string)); err != nil {
 			return err
 		}
 	case *ast.InterfaceType:
-		if err := scp.parseInterfaceType(decl.File, schPtr, tpe, make(map[string]struct{})); err != nil {
+		if err := scp.parseInterfaceType(decl.File, schPtr, tpe, make(map[string]string)); err != nil {
 			return err
 		}
 	case *ast.Ident:
@@ -337,7 +337,7 @@ func (scp *schemaParser) parseNamedType(gofile *ast.File, expr ast.Expr, prop sw
 		if schema == nil {
 			return fmt.Errorf("items doesn't support embedded structs")
 		}
-		return scp.parseStructType(gofile, prop.Schema(), ftpe, make(map[string]struct{}))
+		return scp.parseStructType(gofile, prop.Schema(), ftpe, make(map[string]string))
 
 	case *ast.SelectorExpr:
 		err := scp.typeForSelector(gofile, ftpe, prop)
@@ -380,7 +380,7 @@ func (scp *schemaParser) parseNamedType(gofile *ast.File, expr ast.Expr, prop sw
 	return nil
 }
 
-func (scp *schemaParser) parseEmbeddedType(gofile *ast.File, schema *spec.Schema, expr ast.Expr, seenPreviously map[string]struct{}) error {
+func (scp *schemaParser) parseEmbeddedType(gofile *ast.File, schema *spec.Schema, expr ast.Expr, seenPreviously map[string]string) error {
 	switch tpe := expr.(type) {
 	case *ast.Ident:
 		// do lookup of type
@@ -432,7 +432,7 @@ func (scp *schemaParser) parseEmbeddedType(gofile *ast.File, schema *spec.Schema
 	return fmt.Errorf("unable to resolve embedded struct for: %v\n", expr)
 }
 
-func (scp *schemaParser) parseAllOfMember(gofile *ast.File, schema *spec.Schema, expr ast.Expr, seenPreviously map[string]struct{}) error {
+func (scp *schemaParser) parseAllOfMember(gofile *ast.File, schema *spec.Schema, expr ast.Expr, seenPreviously map[string]string) error {
 	// TODO: check if struct is annotated with swagger:model or known in the definitions otherwise
 	var pkg *loader.PackageInfo
 	var file *ast.File
@@ -486,7 +486,7 @@ func (scp *schemaParser) parseAllOfMember(gofile *ast.File, schema *spec.Schema,
 
 	return nil
 }
-func (scp *schemaParser) parseInterfaceType(gofile *ast.File, bschema *spec.Schema, tpe *ast.InterfaceType, seenPreviously map[string]struct{}) error {
+func (scp *schemaParser) parseInterfaceType(gofile *ast.File, bschema *spec.Schema, tpe *ast.InterfaceType, seenPreviously map[string]string) error {
 	if tpe.Methods == nil {
 		return nil
 	}
@@ -580,7 +580,7 @@ func (scp *schemaParser) parseInterfaceType(gofile *ast.File, bschema *spec.Sche
 				return err
 			}
 
-			seenProperties[nm] = struct{}{}
+			seenProperties[nm] = gnm
 			schema.Properties[nm] = ps
 		}
 
@@ -596,7 +596,7 @@ func (scp *schemaParser) parseInterfaceType(gofile *ast.File, bschema *spec.Sche
 	return nil
 }
 
-func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema, tpe *ast.StructType, seenPreviously map[string]struct{}) error {
+func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema, tpe *ast.StructType, seenPreviously map[string]string) error {
 	if tpe.Fields == nil {
 		return nil
 	}
@@ -670,11 +670,18 @@ func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema,
 	schema.Typed("object", "")
 	for _, fld := range tpe.Fields.List {
 		if len(fld.Names) > 0 && fld.Names[0] != nil && fld.Names[0].IsExported() {
+			fieldName := fld.Names[0].Name
 			nm, ignore, err := parseJSONTag(fld)
 			if err != nil {
 				return err
 			}
 			if ignore {
+				for seenTagName, seenFieldName := range seenPreviously {
+					if seenFieldName == fieldName {
+						delete(schema.Properties, seenTagName)
+						break
+					}
+				}
 				continue
 			}
 
@@ -691,7 +698,11 @@ func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema,
 				return err
 			}
 
-			seenProperties[nm] = struct{}{}
+			// we have 2 cases:
+			// 1. field with different name override tag
+			// 2. field with different name removes tag
+			// so we need to save both tag&name
+			seenProperties[nm] = fieldName
 			schema.Properties[nm] = ps
 		}
 	}
@@ -1155,7 +1166,7 @@ func parseProperty(scp *schemaParser, gofile *ast.File, fld ast.Expr, prop swagg
 		if schema == nil {
 			return fmt.Errorf("items doesn't support embedded structs")
 		}
-		return scp.parseStructType(gofile, prop.Schema(), ftpe, make(map[string]struct{}))
+		return scp.parseStructType(gofile, prop.Schema(), ftpe, make(map[string]string))
 
 	case *ast.SelectorExpr:
 		err := scp.typeForSelector(gofile, ftpe, prop)
