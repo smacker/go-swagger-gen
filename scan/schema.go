@@ -85,14 +85,14 @@ func (sv schemaValidations) SetMinimum(val float64, exclusive bool) {
 	sv.current.Minimum = &val
 	sv.current.ExclusiveMinimum = exclusive
 }
-func (sv schemaValidations) SetMultipleOf(val float64) { sv.current.MultipleOf = &val }
-func (sv schemaValidations) SetMinItems(val int64)     { sv.current.MinItems = &val }
-func (sv schemaValidations) SetMaxItems(val int64)     { sv.current.MaxItems = &val }
-func (sv schemaValidations) SetMinLength(val int64)    { sv.current.MinLength = &val }
-func (sv schemaValidations) SetMaxLength(val int64)    { sv.current.MaxLength = &val }
-func (sv schemaValidations) SetPattern(val string)     { sv.current.Pattern = val }
-func (sv schemaValidations) SetUnique(val bool)        { sv.current.UniqueItems = val }
-func (sv schemaValidations) SetDefault(val string)     { sv.current.Default = val }
+func (sv schemaValidations) SetMultipleOf(val float64)  { sv.current.MultipleOf = &val }
+func (sv schemaValidations) SetMinItems(val int64)      { sv.current.MinItems = &val }
+func (sv schemaValidations) SetMaxItems(val int64)      { sv.current.MaxItems = &val }
+func (sv schemaValidations) SetMinLength(val int64)     { sv.current.MinLength = &val }
+func (sv schemaValidations) SetMaxLength(val int64)     { sv.current.MaxLength = &val }
+func (sv schemaValidations) SetPattern(val string)      { sv.current.Pattern = val }
+func (sv schemaValidations) SetUnique(val bool)         { sv.current.UniqueItems = val }
+func (sv schemaValidations) SetDefault(val interface{}) { sv.current.Default = val }
 func (sv schemaValidations) SetEnum(val string) {
 	list := strings.Split(val, ",")
 	interfaceSlice := make([]interface{}, len(list))
@@ -718,10 +718,15 @@ func (scp *schemaParser) parseStructType(gofile *ast.File, bschema *spec.Schema,
 }
 
 func (scp *schemaParser) createParser(nm string, schema, ps *spec.Schema, fld *ast.Field) *sectionedParser {
-
 	sp := new(sectionedParser)
-	sp.setDescription = func(lines []string) { ps.Description = joinDropLast(lines) }
+
+	schemeType, err := ps.Type.MarshalJSON()
+	if err != nil {
+		return nil
+	}
+
 	if ps.Ref.String() == "" {
+		sp.setDescription = func(lines []string) { ps.Description = joinDropLast(lines) }
 		sp.taggers = []tagParser{
 			newSingleLineTagParser("maximum", &setMaximum{schemaValidations{ps}, rxf(rxMaximumFmt, "")}),
 			newSingleLineTagParser("minimum", &setMinimum{schemaValidations{ps}, rxf(rxMinimumFmt, "")}),
@@ -733,13 +738,17 @@ func (scp *schemaParser) createParser(nm string, schema, ps *spec.Schema, fld *a
 			newSingleLineTagParser("maxItems", &setMaxItems{schemaValidations{ps}, rxf(rxMaxItemsFmt, "")}),
 			newSingleLineTagParser("unique", &setUnique{schemaValidations{ps}, rxf(rxUniqueFmt, "")}),
 			newSingleLineTagParser("enum", &setEnum{schemaValidations{ps}, rxf(rxEnumFmt, "")}),
-			newSingleLineTagParser("default", &setDefault{schemaValidations{ps}, rxf(rxDefaultFmt, "")}),
+			newSingleLineTagParser("default", &setDefault{&spec.SimpleSchema{Type: string(schemeType)}, schemaValidations{ps}, rxf(rxDefaultFmt, "")}),
 			newSingleLineTagParser("required", &setRequiredSchema{schema, nm}),
 			newSingleLineTagParser("readOnly", &setReadOnlySchema{ps}),
 			newSingleLineTagParser("discriminator", &setDiscriminator{schema, nm}),
 		}
 
 		itemsTaggers := func(items *spec.Schema, level int) []tagParser {
+			schemeType, err := items.Type.MarshalJSON()
+			if err != nil {
+				return nil
+			}
 			// the expression is 1-index based not 0-index
 			itemsPrefix := fmt.Sprintf(rxItemsPrefixFmt, level+1)
 			return []tagParser{
@@ -753,7 +762,7 @@ func (scp *schemaParser) createParser(nm string, schema, ps *spec.Schema, fld *a
 				newSingleLineTagParser(fmt.Sprintf("items%dMaxItems", level), &setMaxItems{schemaValidations{items}, rxf(rxMaxItemsFmt, itemsPrefix)}),
 				newSingleLineTagParser(fmt.Sprintf("items%dUnique", level), &setUnique{schemaValidations{items}, rxf(rxUniqueFmt, itemsPrefix)}),
 				newSingleLineTagParser(fmt.Sprintf("items%dEnum", level), &setEnum{schemaValidations{items}, rxf(rxEnumFmt, itemsPrefix)}),
-				newSingleLineTagParser(fmt.Sprintf("items%dDefault", level), &setDefault{schemaValidations{items}, rxf(rxDefaultFmt, itemsPrefix)}),
+				newSingleLineTagParser(fmt.Sprintf("items%dDefault", level), &setDefault{&spec.SimpleSchema{Type: string(schemeType)}, schemaValidations{items}, rxf(rxDefaultFmt, itemsPrefix)}),
 			}
 
 		}
@@ -824,6 +833,30 @@ func (scp *schemaParser) createParser(nm string, schema, ps *spec.Schema, fld *a
 	return sp
 }
 
+// hasFilePathPrefix reports whether the filesystem path s begins with the
+// elements in prefix.
+//
+// taken from: https://github.com/golang/go/blob/c87520c5981ecdeaa99e7ba636a6088f900c0c75/src/cmd/go/internal/load/path.go#L60-L80
+func hasFilePathPrefix(s, prefix string) bool {
+	sv := strings.ToUpper(filepath.VolumeName(s))
+	pv := strings.ToUpper(filepath.VolumeName(prefix))
+	s = s[len(sv):]
+	prefix = prefix[len(pv):]
+	switch {
+	default:
+		return false
+	case sv != pv:
+		return false
+	case len(s) == len(prefix):
+		return s == prefix
+	case len(s) > len(prefix):
+		if prefix != "" && prefix[len(prefix)-1] == filepath.Separator {
+			return strings.HasPrefix(s, prefix)
+		}
+		return s[len(prefix)] == filepath.Separator && s[:len(prefix)] == prefix
+	}
+}
+
 func (scp *schemaParser) packageForFile(gofile *ast.File, tpe *ast.Ident) (*loader.PackageInfo, error) {
 	fn := scp.program.Fset.File(gofile.Pos()).Name()
 	if Debug {
@@ -839,7 +872,7 @@ func (scp *schemaParser) packageForFile(gofile *ast.File, tpe *ast.Ident) (*load
 	var fgp string
 	for _, p := range append(filepath.SplitList(os.Getenv("GOPATH")), runtime.GOROOT()) {
 		pref := filepath.Join(p, "src")
-		if filepath.HasPrefix(fa, pref) {
+		if hasFilePathPrefix(fa, pref) {
 			fgp = filepath.Dir(strings.TrimPrefix(fa, pref))[1:]
 			break
 		}

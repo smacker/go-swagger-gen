@@ -41,6 +41,7 @@ func TestSchemaParser(t *testing.T) {
 	assert.NotNil(t, prop.Minimum)
 	assert.EqualValues(t, 10, *prop.Minimum)
 	assert.True(t, prop.ExclusiveMinimum, "'id' should have had an exclusive minimum")
+	assert.Equal(t, 11, prop.Default, "ID default value is incorrect")
 
 	assertProperty(t, &schema, "string", "NoNameOmitEmpty", "", "")
 	prop, ok = schema.Properties["NoNameOmitEmpty"]
@@ -127,11 +128,11 @@ func TestSchemaParser(t *testing.T) {
 	assert.NotNil(t, iprop.Minimum)
 	assert.EqualValues(t, 10, *iprop.Minimum)
 	assert.True(t, iprop.ExclusiveMinimum, "'id' should have had an exclusive minimum")
+	assert.Equal(t, 11, iprop.Default, "ID default value is incorrect")
 
 	assertRef(t, itprop, "pet", "Pet", "#/definitions/pet")
 	iprop, ok = itprop.Properties["pet"]
 	assert.True(t, ok)
-	assert.Equal(t, "The Pet to add to this NoModel items bucket.\nPets can appear more than once in the bucket", iprop.Description)
 
 	assertProperty(t, itprop, "integer", "quantity", "int16", "Quantity")
 	iprop, ok = itprop.Properties["quantity"]
@@ -319,8 +320,7 @@ func assertProperty(t testing.TB, schema *spec.Schema, typeName, jsonName, forma
 }
 
 func assertRef(t testing.TB, schema *spec.Schema, jsonName, goName, fragment string) {
-
-	assertProperty(t, schema, "", jsonName, "", goName)
+	assert.Empty(t, schema.Properties[jsonName].Type)
 	psch := schema.Properties[jsonName]
 	assert.Equal(t, fragment, psch.Ref.String())
 }
