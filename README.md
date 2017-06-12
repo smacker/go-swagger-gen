@@ -146,7 +146,7 @@ type MyModelInputDTO struct {
 ```go
 type MyModelInputDTO struct {
     //don't need to add "required" comment
-    CreatedAt time.Time `json:"created_at";valid:"required"`
+    CreatedAt time.Time `json:"created_at" valid:"required"`
 }
 ```
 
@@ -156,7 +156,7 @@ type MyModelInputDTO struct {
 type MyModelInputDTO struct {
     //technical comment, shouldn't appear as description in swagger
     // but this comment is used as description
-    CreatedAt time.Time `json:"created_at";valid:"required"`
+    CreatedAt time.Time `json:"created_at" valid:"required"`
 }
 ```
 
