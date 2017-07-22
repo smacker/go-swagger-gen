@@ -173,6 +173,8 @@ type MyModel struct {
 
 Aliases in swagger.json present as native types. Therefore all validation comments work as expected for them.
 
+(similar fix was merged to go-swagger https://github.com/go-swagger/go-swagger/pull/1087, but works slightly different)
+
 ### x-go-name extension was removed
 
 I don't want to expose internal name in swagger
