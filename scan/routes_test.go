@@ -207,14 +207,14 @@ func assertOperation(t *testing.T, op *spec.Operation, id, summary, description 
 	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Consumes)
 	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Produces)
 	assert.EqualValues(t, []string{"http", "https", "ws", "wss"}, op.Schemes)
-	assert.Len(t, op.Security, 2)
+	assert.Len(t, op.Security, 1)
 	akv, ok := op.Security[0]["api_key"]
 	assert.True(t, ok)
 	// akv must be defined & not empty
 	assert.NotNil(t, akv)
 	assert.Empty(t, akv)
 
-	vv, ok := op.Security[1]["oauth"]
+	vv, ok := op.Security[0]["oauth"]
 	assert.True(t, ok)
 	assert.EqualValues(t, scopes, vv)
 
@@ -238,14 +238,14 @@ func assertOperationAnnotated(t *testing.T, op *spec.Operation, id, summary, des
 	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Consumes)
 	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Produces)
 	assert.EqualValues(t, []string{"http", "https", "ws", "wss"}, op.Schemes)
-	assert.Len(t, op.Security, 2)
+	assert.Len(t, op.Security, 1)
 	akv, ok := op.Security[0]["api_key"]
 	assert.True(t, ok)
 	// akv must be defined & not empty
 	assert.NotNil(t, akv)
 	assert.Empty(t, akv)
 
-	vv, ok := op.Security[1]["oauth"]
+	vv, ok := op.Security[0]["oauth"]
 	assert.True(t, ok)
 	assert.EqualValues(t, scopes, vv)
 
@@ -270,14 +270,14 @@ func assertOperationBody(t *testing.T, op *spec.Operation, id, summary, descript
 	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Consumes)
 	assert.EqualValues(t, []string{"application/json", "application/x-protobuf"}, op.Produces)
 	assert.EqualValues(t, []string{"http", "https", "ws", "wss"}, op.Schemes)
-	assert.Len(t, op.Security, 2)
+	assert.Len(t, op.Security, 1)
 	akv, ok := op.Security[0]["api_key"]
 	assert.True(t, ok)
 	// akv must be defined & not empty
 	assert.NotNil(t, akv)
 	assert.Empty(t, akv)
 
-	vv, ok := op.Security[1]["oauth"]
+	vv, ok := op.Security[0]["oauth"]
 	assert.True(t, ok)
 	assert.EqualValues(t, scopes, vv)
 

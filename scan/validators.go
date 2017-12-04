@@ -558,7 +558,7 @@ func (ss *setSecurityDefinitions) Parse(lines []string) error {
 	}
 
 	result := spec.SecurityDefinitions{}
-	var scheme spec.SecurityScheme
+	var scheme *spec.SecurityScheme
 	var key string
 	var tp []tagParser
 	for i := 0; i < len(lines); i++ {
@@ -571,18 +571,18 @@ func (ss *setSecurityDefinitions) Parse(lines []string) error {
 
 		if v == "" {
 			if key != "" {
-				result[key] = &scheme
+				result[key] = scheme
 			}
-			scheme = spec.SecurityScheme{}
+			scheme = &spec.SecurityScheme{}
 			key = k
 			tp = []tagParser{
-				newSingleLineTagParser("type", newSetField(rxSecuritySchemeType, setSecuritySchemeType(&scheme))),
-				newSingleLineTagParser("name", newSetField(rxSecuritySchemeName, setSecuritySchemeName(&scheme))),
-				newSingleLineTagParser("in", newSetField(rxSecuritySchemeIn, setSecuritySchemeIn(&scheme))),
-				newSingleLineTagParser("flow", newSetField(rxSecuritySchemeFlow, setSecuritySchemeFlow(&scheme))),
-				newSingleLineTagParser("description", newSetField(rxSecuritySchemeDescription, setSecuritySchemeDescription(&scheme))),
-				newSingleLineTagParser("authorizationUrl", newSetField(rxSecuritySchemeAuthorization, setSecuritySchemeAuthorizationURL(&scheme))),
-				newSingleLineTagParser("tokenUrl", newSetField(rxSecuritySchemeToken, setSecuritySchemeTokenURL(&scheme))),
+				newSingleLineTagParser("type", newSetField(rxSecuritySchemeType, setSecuritySchemeType(scheme))),
+				newSingleLineTagParser("name", newSetField(rxSecuritySchemeName, setSecuritySchemeName(scheme))),
+				newSingleLineTagParser("in", newSetField(rxSecuritySchemeIn, setSecuritySchemeIn(scheme))),
+				newSingleLineTagParser("flow", newSetField(rxSecuritySchemeFlow, setSecuritySchemeFlow(scheme))),
+				newSingleLineTagParser("description", newSetField(rxSecuritySchemeDescription, setSecuritySchemeDescription(scheme))),
+				newSingleLineTagParser("authorizationUrl", newSetField(rxSecuritySchemeAuthorization, setSecuritySchemeAuthorizationURL(scheme))),
+				newSingleLineTagParser("tokenUrl", newSetField(rxSecuritySchemeToken, setSecuritySchemeTokenURL(scheme))),
 			}
 			continue
 		} else {
@@ -598,7 +598,7 @@ func (ss *setSecurityDefinitions) Parse(lines []string) error {
 		}
 	}
 	if _, ok := result[key]; !ok && key != "" {
-		result[key] = &scheme
+		result[key] = scheme
 	}
 
 	ss.set(result)
@@ -689,7 +689,7 @@ func (ss *setSecurity) Parse(lines []string) error {
 		return nil
 	}
 
-	var result []map[string][]string
+	var r = make(map[string][]string)
 	for _, line := range lines {
 		kv := strings.SplitN(line, ":", 2)
 		scopes := []string{}
@@ -701,15 +701,19 @@ func (ss *setSecurity) Parse(lines []string) error {
 				tr := strings.TrimSpace(scope)
 				if tr != "" {
 					tr = strings.SplitAfter(tr, " ")[0]
-					scopes = append(scopes, strings.TrimSpace(tr))
+					item := strings.TrimSpace(tr)
+					if item != `[]` {
+						scopes = append(scopes, item)
+					}
 				}
 			}
 
 			key = strings.TrimSpace(kv[0])
-
-			result = append(result, map[string][]string{key: scopes})
+			r[key] = scopes
 		}
 	}
+	var result = make([]map[string][]string, 1)
+	result[0] = r
 	ss.set(result)
 	return nil
 }

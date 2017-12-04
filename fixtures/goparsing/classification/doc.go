@@ -40,12 +40,18 @@
 //     - application/xml
 //
 //     Security:
-//     - api_key:
+//     -
+//       api_key: []
+//       api_key_2: []
 //
 //     SecurityDefinitions:
 //     - api_key:
 //          type: apiKey
 //          name: KEY
+//          in: header
+//     - api_key_2:
+//          type: apiKey
+//          name: KEY2
 //          in: header
 //
 // swagger:meta
